@@ -1,0 +1,9 @@
+title: "ゼロから作るMIPモデラー"
+summary: "これはPythonでゼロから混合整数計画モデラーを作成する本です．"
+topics: [数理最適化]
+published: false
+price: 0 # 有料の場合200〜5000
+# 本に含めるチャプターを順番に並べましょう
+chapters:
+  - ch1
+  - ch2
