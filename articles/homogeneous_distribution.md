@@ -3,7 +3,7 @@ title: "割当問題で分布を均質化する"
 emoji: "🙌"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: [数理最適化, Python, mip, pythonmip]
-published: false
+published: true
 ---
 
 こんにちは，新卒 2 年目データサイエンティストの[はだ](https://twitter.com/H_A_ust)です．
@@ -50,7 +50,7 @@ $$
 その他の詳細な制約条件については書籍や[サポートページ](https://github.com/ohmsha/PyOptBook/blob/main/3.school/school.ipynb)を参照してください．
 
 このモデルのもとで計算を行うと各クラスの試験点数分布は以下のようになります．
-![各クラスの試験点数分布](../images/homogeneous_distribution/naive.png)
+![各クラスの試験点数分布](/images/homogeneous_distribution/naive.png)
 
 概ねバランスが取れていそうに見えますがこのモデルだと平均値しか考慮できていないため分散や歪み方などがクラスによって異なっていることがわかります．
 例えばクラス B は左に偏った幅の広い分布になっている一方で，クラス G はどちらかというと右に偏った幅の狭い分布になっていることがわかります．
@@ -71,7 +71,7 @@ $$
 $$
 
 このモデルを実行すると以下のような結果が得られます．
-![各クラスの試験点数分布](../images/homogeneous_distribution/init_sol_approach.png)
+![各クラスの試験点数分布](/images/homogeneous_distribution/init_sol_approach.png)
 
 分布を見ると先ほどよりもそれぞれのクラスの得点分布が均質化されていそうです．  
 実際にこれらの分布の違いを定量化するために，各クラスの学力分布に対して平均，分散，歪度，尖度を計算して，それぞれの最大値-最小値を計算してみます．
@@ -102,7 +102,7 @@ $$
 ここで $S_p = \{ s \in S | score_s = p \}$として，得点が$p$の生徒の集合を表すものとします．  
 このアプローチのイメージは下図のように，オレンジ色の各クラスの得点$p$の人数$\sum_{s \in S_p} x_{s,c}\ (c \in C)$の違いが小さくなるようにする目的関数を考えて，それを全ての得点$p \in P$に対して足し合わせることで，分布の均質化を行います．
 
-![点数ごとの分布](../images/homogeneous_distribution/point_wise.png)
+![点数ごとの分布](/images/homogeneous_distribution/point_wise.png)
 
 このアプローチは以下のように定式化できます．
 
@@ -134,14 +134,14 @@ $$
 以上の結果の原因を考察するために 300 点〜304 点までの生徒が 3 人ずついて，2 クラスに分けるようなシンプルな状況を考えます．  
 このような設定ではなんとなく下図のような分布になってほしい気持ちになります．
 
-![点数ごとの分布](../images/homogeneous_distribution/opt_sol_explain2.png)
+![点数ごとの分布](/images/homogeneous_distribution/opt_sol_explain2.png)
 _理想的な解_
 
 上のモデルにおける最適化にいて考えると，各得点(300,301,...,304)に対して一方のグループに 1 人，他方に 2 人を割り当てるという解が最適解となります．  
 これは上の理想的な解も最適解として出力され得ることを意味します．
 一方で，このモデルでは 300,301,302 点でクラス A に 2 人割り当てて，303,304 点でクラス B に 2 人割り当てるという下の図のような均質的な出ない分布の解も最適解となってしまいます．
 
-![点数ごとの分布](../images/homogeneous_distribution/opt_sol_explain1.png)
+![点数ごとの分布](/images/homogeneous_distribution/opt_sol_explain1.png)
 _偏った解_
 
 つまるところ，このモデルでは点数ごとにしか均等に割り振ることを考慮できていないことが問題であると考えられます．
@@ -164,7 +164,7 @@ $$
 このモデルの場合は先ほどの例での偏った解は最適解とはならずに理想的な解のみが最適解となります．
 イメージとしては下図のように，各得点$p$に対して，各クラスに割り当てられた得点$p$以下の生徒人数が均等になるようにするという感じです．
 
-![累積分布](../images/homogeneous_distribution/cumulative.png)
+![累積分布](/images/homogeneous_distribution/cumulative.png)
 
 では，実際にこのモデルで計算を実行してみると以下のような結果が得られます．
 
