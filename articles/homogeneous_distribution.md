@@ -107,7 +107,7 @@ $$
 $$
 \begin{align*}
 \text{min.} \quad & \sum_{p \in P} z_p \\
-\text{s.t.} \quad &  - z_p \le \sum_{s \in S_p} x_{s,c} - \frac{|C|}{|S_p|} \le z_p, \quad \forall c \in C, \forall p \in P,\\
+\text{s.t.} \quad &  - z_p \le \sum_{s \in S_p} x_{s,c} - \frac{|S_p|}{|C|} \le z_p, \quad \forall c \in C, \forall p \in P,\\
 & \\
 & \vdots \quad \text{(other constraints)} \\
 & \\
