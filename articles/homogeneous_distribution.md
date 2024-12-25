@@ -34,12 +34,12 @@ published: true
 $$
 \begin{align*}
 \text{find} \quad & x_{s,c} \\
-\text{s.t.} \quad & \overline{score} - 10 \le \sum_{s \in S} x_{s,c} \cdot score_s \le \overline{score} + 10, \quad \forall c \in C, \\
+\text{s.t.} \quad & \overline{score} - 10 \le \frac{\sum_{s \in S} x_{s,c} \cdot score_s}{\sum_{s \in S} x_{s,c}} \le \overline{score} + 10, \quad \forall c \in C, \\
 & \\
 & \vdots \quad \text{(other constraints)} \\
 & \\
 & \sum_{c \in C} x_{s,c} = 1, \quad \forall s \in S, \\
-& \left \lfloor \frac{|C|}{|S|} \right \rfloor \le \sum_{s \in S} x_{s,c} \le \left \lceil \frac{|C|}{|S|} \right \rceil, \quad \forall c \in C. \\
+& \left \lfloor \frac{|S|}{|C|} \right \rfloor \le \sum_{s \in S} x_{s,c} \le \left \lceil \frac{|S|}{|C|} \right \rceil, \quad \forall c \in C. \\
 \end{align*}
 $$
 
@@ -50,8 +50,8 @@ $$
 このモデルのもとで計算を行うと各クラスの試験点数分布は以下のようになります．
 ![各クラスの試験点数分布](/images/homogeneous_distribution/naive.png)
 
-概ねバランスが取れていそうに見えますがこのモデルだと平均値しか考慮できていないため分散や歪み方などがクラスによって異なっていることがわかります．
-例えばクラス B は左に偏った幅の広い分布になっている一方で，クラス G はどちらかというと右に偏った幅の狭い分布になっていることがわかります．
+概ねバランスが取れていそうに見えますがこのモデルだと平均値しか考慮できていないため標準偏差や歪み方などがクラスによって異なっていることがわかります．
+例えばクラス B は右に偏った幅の広い分布になっている一方で，クラス E はどちらかというと右に偏った幅の狭い分布になっていることがわかります．
 
 この問題点を解決するために書籍では，まず得点ごとに生徒をソートして各クラスに順番に割り当てるという初期解を生成した後に，各種制約を満たすように初期解からの変更量を最小化するというモデリングを行っています．  
 このモデルは，初期解において生徒$s$をクラス$c$に割り当てる場合に 1,それ以外は 0 の値を取る定数 $X_{s,c}$を用いて以下のように定式化されます．
@@ -59,12 +59,12 @@ $$
 $$
 \begin{align*}
 \text{min.} \quad & \sum_{s \in S} \sum_{c \in C} X_{s,c}\cdot x_{s,c} \\
-\text{s.t.} \quad & \overline{score} - 10 \le \sum_{s \in S} X_{s,c} \cdot score_s \le \overline{score} + 10, \quad \forall c \in C, \\
+\text{s.t.} \quad & \overline{score} - 10 \le \frac{\sum_{s \in S} x_{s,c} \cdot score_s}{\sum_{s \in S} x_{s,c}} \le \overline{score} + 10, \quad \forall c \in C, \\
 & \\
 & \vdots \quad \text{(other constraints)} \\
 & \\
 & \sum_{c \in C} x_{s,c} = 1, \quad \forall s \in S, \\
-& \left \lfloor \frac{|C|}{|S|} \right \rfloor \le \sum_{s \in S} x_{s,c} \le \left \lceil \frac{|C|}{|S|} \right \rceil, \quad \forall c \in C. \\
+& \left \lfloor \frac{|S|}{|C|} \right \rfloor \le \sum_{s \in S} x_{s,c} \le \left \lceil \frac{|S|}{|C|} \right \rceil, \quad \forall c \in C. \\
 \end{align*}
 $$
 
@@ -72,7 +72,7 @@ $$
 ![各クラスの試験点数分布](/images/homogeneous_distribution/init_sol_approach.png)
 
 分布を見ると先ほどよりもそれぞれのクラスの得点分布が均質化されていそうです．  
-実際にこれらの分布の違いを定量化するために，各クラスの学力分布に対して平均，分散，歪度，尖度を計算して，それぞれの最大値-最小値を計算してみます．
+実際にこれらの分布の違いを定量化するために，各クラスの学力分布に対して平均，標準偏差，歪度，尖度を計算して，それぞれの最大値-最小値を計算してみます．
 まず先ほどのナイーブモデルの結果は以下のようになります．
 
 | 統計量   | 最大値-最小値 |
@@ -91,14 +91,14 @@ $$
 | 歪度     | 1.171639      |
 | 尖度     | 1.232404      |
 
-結果を見ると，各クラスの平均値の違いは制約条件で考慮されていることもあり同じくらいですが，分散が大幅に均質化されていることがわかります．
+結果を見ると，各クラスの平均値の違いは制約条件で考慮されていることもあり同じくらいですが，標準偏差が大幅に均質化されていることがわかります．
 
 # 別解法
 
 書籍では上述のルールベースで生成した初期解を用いた解法を紹介していますが，本記事では分布の均質化を目的関数に直接組み込んだ別アプローチを考えてみたいと思います．  
 まずはシンプルに各点数 $p \in P=\{\min(Score_s), \dots, \max(Score_s)\}$において，各クラスの分布の値が等しくなるようにする目的関数が思い付きます．  
 ここで $S_p = \{ s \in S | score_s = p \}$として，得点が$p$の生徒の集合を表すものとします．  
-このアプローチのイメージは下図のように，オレンジ色の各クラスの得点$p$の人数$\sum_{s \in S_p} x_{s,c}\ (c \in C)$の違いが小さくなるようにする目的関数を考えて，それを全ての得点$p \in P$に対して足し合わせることで，分布の均質化を行います．
+このアプローチのイメージは下図のように，各クラスの得点$p$の人数$\sum_{s \in S_p} x_{s,c}$（オレンジ色の部分）の違いが小さくなるようにする目的関数を考えて，それを全ての得点$p \in P$に対して足し合わせることで，分布の均質化を行います．
 
 ![点数ごとの分布](/images/homogeneous_distribution/point_wise.png)
 
@@ -112,7 +112,7 @@ $$
 & \vdots \quad \text{(other constraints)} \\
 & \\
 & \sum_{c \in C} x_{s,c} = 1, \quad \forall s \in S, \\
-& \left \lfloor \frac{|C|}{|S|} \right \rfloor \le \sum_{s \in S} x_{s,c} \le \left \lceil \frac{|C|}{|S|} \right \rceil, \quad \forall c \in C. \\
+& \left \lfloor \frac{|S|}{|C|} \right \rfloor \le \sum_{s \in S} x_{s,c} \le \left \lceil \frac{|S|}{|C|} \right \rceil, \quad \forall c \in C. \\
 \end{align*}
 $$
 
@@ -150,12 +150,12 @@ _偏った解_
 $$
 \begin{align*}
 \text{min.} \quad & \sum_{p \in P} z_p \\
-\text{s.t.} \quad &  - z_p \le \sum_{s \in S_\le p} x_{s,c} - \frac{|C|}{|S_\le p|} \le z_p, \quad \forall c \in C, \forall p \in P,\\
+\text{s.t.} \quad &  - z_p \le \sum_{s \in S_\le p} x_{s,c} - \frac{|S_\le p|}{|C|} \le z_p, \quad \forall c \in C, \forall p \in P,\\
 & \\
 & \vdots \quad \text{(other constraints)} \\
 & \\
 & \sum_{c \in C} x_{s,c} = 1, \quad \forall s \in S, \\
-& \left \lfloor \frac{|C|}{|S|} \right \rfloor \le \sum_{s \in S} x_{s,c} \le \left \lceil \frac{|C|}{|S|} \right \rceil, \quad \forall c \in C. \\
+& \left \lfloor \frac{|S|}{|C|} \right \rfloor \le \sum_{s \in S} x_{s,c} \le \left \lceil \frac{|S|}{|C|} \right \rceil, \quad \forall c \in C. \\
 \end{align*}
 $$
 
@@ -164,7 +164,7 @@ $$
 
 ![累積分布](/images/homogeneous_distribution/cumulative.png)
 
-では，実際にこのモデルで計算を実行してみると以下のような結果が得られます．
+実際にこのモデルで計算を実行してみると以下のような結果が得られます．
 
 | 統計量   | 最大値-最小値 |
 | -------- | ------------- |
@@ -174,7 +174,7 @@ $$
 | 尖度     | 1.074960      |
 
 明示的に平均値 ±10 点の制約を入れていなくても平均値が均質化されていることがわかります．
-さらに分散，歪度，尖度に関してもうまく均質化されていることが分かります．
+さらに標準偏差，歪度，尖度に関してもうまく均質化されていることが分かります．
 
 # まとめ
 
